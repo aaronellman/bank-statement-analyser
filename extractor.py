@@ -1,14 +1,16 @@
 import pymupdf
+from pathlib import Path
 
 def get_tables(path: str):
-    doc = pymupdf.open(path)
-    print(f"Pages: {len(doc)}")
+    p = Path(path)
+    files = list(p.iterdir()) if p.is_dir() else [p]
 
-
-    #tbls = [page.find_tables for page in doc]
     tables = []
-    for page in doc:
-        tables += page.find_tables()
+    for file in files:
+        doc = pymupdf.open(file)
+
+        for page in doc:
+            tables += page.find_tables()
 
     return [table.to_markdown() for table in tables]
 
