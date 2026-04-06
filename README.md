@@ -1,0 +1,114 @@
+# bank-statement-analyzer
+
+A Python CLI tool that parses PDF bank statements, stores transactions in a local SQLite database, and surfaces spending insights.
+
+## Features
+
+- **PDF parsing** - extracts transactions from one or more PDF bank statements using `pdfplumber`
+- **Local storage** - persists transactions in a SQLite database with deduplication so re-importing the same file is safe
+- **Auto-categorisation** - maps transaction descriptions to categories via keyword rules (e.g. `UBER` → `Transport`)
+- **Spending insights** - summarises spending by category, month, or merchant
+- **Rich terminal UI** - tables, colours, and progress bars via `rich`
+
+## Transaction shape
+
+Each transaction is stored with the following fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `date` | `str` | ISO 8601 date, e.g. `2024-01-15` |
+| `description` | `str` | Raw merchant/payee string from the statement |
+| `amount` | `float` | Negative = debit, positive = credit |
+| `category` | `str` | Auto-assigned category or `Uncategorised` |
+| `source_file` | `str` | Filename of the source PDF |
+
+## Installation
+
+Requires Python 3.13+ and [uv](https://docs.astral.sh/uv/).
+
+```bash
+git clone https://github.com/your-username/bank-statement-analyzer.git
+cd bank-statement-analyzer
+uv sync
+```
+
+## Usage
+
+### Import statements
+
+Parse one or more PDF files and load their transactions into the database:
+
+```bash
+uv run python main.py import january_2024.pdf
+uv run python main.py import statements/*.pdf
+```
+
+Re-importing the same file will not create duplicate records.
+
+### View a spending summary
+
+Display a breakdown of spending by category:
+
+```bash
+uv run python main.py summary
+```
+
+Filter by month:
+
+```bash
+uv run python main.py summary --month 2024-01
+```
+
+### Manage categorisation rules
+
+Add a custom keyword-to-category rule:
+
+```bash
+uv run python main.py categorise add "Uber" Transport
+```
+
+List all user-defined rules:
+
+```bash
+uv run python main.py categorise list
+```
+
+Remove a rule:
+
+```bash
+uv run python main.py categorise remove "Uber"
+```
+
+## Categorisation
+
+Transactions are categorised by matching keywords (case-insensitive) against the transaction description. A set of built-in defaults covers common merchants automatically. User-defined rules are stored in the database and take priority over the defaults — any rule you add via `categorise add` will override the built-in mapping for that keyword.
+
+Transactions that match no keyword are stored as `Uncategorised`.
+
+## Project structure
+
+```
+bank-statement-analyzer/
+├── main.py          # CLI entry point and commands
+├── pyproject.toml   # Project metadata and dependencies
+├── uv.lock          # Locked dependency versions
+└── statements.db    # SQLite database (created on first import)
+```
+
+## Dependencies
+
+| Package | Purpose |
+|---|---|
+| `pdfplumber` | Extract text and tables from PDF files |
+| `typer` | CLI argument parsing and command routing |
+| `rich` | Terminal formatting, tables, and progress display |
+
+## Development
+
+```bash
+# Install dependencies
+uv sync
+
+# Run the CLI
+uv run python main.py --help
+```
