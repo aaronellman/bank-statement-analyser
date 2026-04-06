@@ -4,7 +4,7 @@ A Python CLI tool that parses PDF bank statements, stores transactions in a loca
 
 ## Features
 
-- **PDF parsing** - extracts transactions from one or more PDF bank statements using `pdfplumber`
+- **PDF parsing** - extracts transactions from one or more PDF bank statements using `pymupdf`
 - **Local storage** - persists transactions in a SQLite database with deduplication so re-importing the same file is safe
 - **Auto-categorisation** - maps transaction descriptions to categories via keyword rules (e.g. `UBER` → `Transport`)
 - **Spending insights** - summarises spending by category, month, or merchant
@@ -99,7 +99,7 @@ bank-statement-analyzer/
 
 | Package | Purpose |
 |---|---|
-| `pdfplumber` | Extract text and tables from PDF files |
+| `pymupdf` | Extract text and tables from PDF files |
 | `typer` | CLI argument parsing and command routing |
 | `rich` | Terminal formatting, tables, and progress display |
 
