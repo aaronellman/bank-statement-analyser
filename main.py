@@ -10,13 +10,15 @@ def main():
     
     result = get_tables(input("Path to file: "))
 
-    tables_md, tables = result[0], result[1]
-    
-    formatted_result = format_tables(tables)
+    tables_md, pages = result[0], result[1]
+    statements_dict = format_tables(pages)
 
-    print(f"[blue bold]Total Pages: {len(tables)}")
+    print(f"[blue bold]Total Pages: {len(pages)}")
+    print(statements_dict)
 
-    print(formatted_result)
+    response = [print(item.get("Date")) for item in statements_dict]
+    rows = len(response)
+    print(f"# Of Items: {rows}\nResponse: {response}")
     
     for table in tables_md: 
         md = Markdown(table)
