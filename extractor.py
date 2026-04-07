@@ -1,5 +1,7 @@
 import pymupdf
 from pathlib import Path
+import re
+from datetime import datetime
 
 def get_tables(path: str):
     """returns markdown of the tables in the statement and the tables themselves"""
@@ -11,10 +13,13 @@ def get_tables(path: str):
     pages = []
     for file in files:
         doc = pymupdf.open(file)
+        
+        start_date,end_date = _extract_statement_period(doc)
         for page in doc:
+            
             for table in page.find_tables():
                 markdowns.append(table.to_markdown())
-            pages.append((page, str(file)))
+            pages.append((page, str(file), start_date, end_date))
 
     return markdowns, pages
 
@@ -32,12 +37,14 @@ def _parse_amount(row: list, amount_idx: int) -> str:
         amount += "Cr"
     return amount
 
+
 def _sign_amount(amount: str):
     if "Cr" in amount:
         return amount.replace("Cr", "").strip()
     return f"-{amount}"
 
-def _table_to_dicts(table_data: list, path: str) -> list[dict]:
+
+def _table_to_dicts(table_data: list, path: str, start_date, end_date) -> list[dict]:
     header_idx = _find_header_idx(table_data)
     if header_idx is None:
         return []
@@ -47,7 +54,7 @@ def _table_to_dicts(table_data: list, path: str) -> list[dict]:
 
     return [
         {
-            'Date': row[headers.index('Date')],
+            'Date': _resolve_year(row[headers.index('Date')], start_date, end_date),
             'Description': row[headers.index('Description')],
             'Amount': _sign_amount(_parse_amount(row, amount_idx)),
             'Balance': row[headers.index('Balance')],
@@ -58,11 +65,32 @@ def _table_to_dicts(table_data: list, path: str) -> list[dict]:
     ]
 
 
+def _extract_statement_period(doc):
+    text = doc[0].get_text()
+    
+    m = re.search(r"Statement Period\s*:\s*(\d{1,2}\s+\w+\s+\d{4})\s+to\s+(\d{1,2}\s+\w+\s+\d{4})", text)
+    start,end = m.group(1), m.group(2)
+    start_date,end_date = datetime.strptime(start, "%d %B %Y"), datetime.strptime(end, "%d %B %Y")
+    
+    return start_date,end_date
+
+def _resolve_year(date_str: str, start_date: datetime, end_date: datetime) -> str:
+    parsed = datetime.strptime(date_str.strip(), "%d %b")
+    
+    for year in {start_date.year, end_date.year}:
+        candidate = parsed.replace(year=year).date()
+        
+        if start_date.date() <= candidate <= end_date.date():
+            return candidate.isoformat()
+    
+    raise ValueError(f"Could not resolve year for '{date_str}' within {start_date} to {end_date}")
+
 def format_tables(pages) -> list[dict]:
     """takes the pages that get_tables returns and returning a list of dictionaries for insertion into db"""
+
     return [
         entry
-        for page, path in pages
+        for page, path, start_date, end_date in pages
         for table in page.find_tables()
-        for entry in _table_to_dicts(table.extract(),path)
+        for entry in _table_to_dicts(table.extract(),path, start_date, end_date)
     ]

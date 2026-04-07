@@ -10,8 +10,9 @@ def main():
     console.rule("[bold]Bank-statement-analyzer")
     
     result = get_tables(input("Path to file: "))
-
+    
     tables_md, pages = result[0], result[1]
+    
     statements_dict = format_tables(pages)
 
     init_db()

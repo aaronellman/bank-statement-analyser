@@ -9,7 +9,9 @@ wheels/
 # Virtual environments
 .venv
 .history/
+plan.md
 
 # Database
 *.db
+
 
