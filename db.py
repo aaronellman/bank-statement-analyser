@@ -39,9 +39,19 @@ def insert_transactions(transactions: list[dict]):
 def select_transactions():
     with sqlite3.connect(DB_PATH) as conn:
         return conn.execute("SELECT * FROM transactions").fetchall()
-    
+
 
 def select_rules():
     with sqlite3.connect(DB_PATH) as conn:
         conn.row_factory = sqlite3.Row
         return [dict(row) for row in conn.execute("SELECT * FROM rules").fetchall()]
+    
+
+def insert_rules(rules: list[dict]):
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.exectute(
+            """INSERT OR IGNORE INTO rules
+               (keyword, category)
+               VALUES (:Keyword, :Category)""",
+            rules
+        )
