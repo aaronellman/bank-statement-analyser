@@ -29,9 +29,13 @@ def _find_header_idx(table_data: list) -> int | None:
 def _parse_amount(row: list, amount_idx: int) -> str:
     amount = row[amount_idx]
     if row[amount_idx + 1] == 'Cr':
-        amount += 'Cr'
+        amount += "Cr"
     return amount
 
+def _sign_amount(amount: str):
+    if "Cr" in amount:
+        return amount.replace("Cr", "").strip()
+    return f"-{amount}"
 
 def _table_to_dicts(table_data: list) -> list[dict]:
     header_idx = _find_header_idx(table_data)
@@ -45,7 +49,7 @@ def _table_to_dicts(table_data: list) -> list[dict]:
         {
             'Date': row[headers.index('Date')],
             'Description': row[headers.index('Description')],
-            'Amount': _parse_amount(row, amount_idx),
+            'Amount': _sign_amount(_parse_amount(row, amount_idx)),
             'Balance': row[headers.index('Balance')],
             'Accrued Bank Charges': row[headers.index('Accrued\nBank\nCharges')],
         }
