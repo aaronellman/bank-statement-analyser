@@ -20,9 +20,9 @@ def main():
     rows = len(response)
     print(f"# Of Items: {rows}\nResponse: {response}")
     
-    for table in tables_md: 
+    """for table in tables_md: 
         md = Markdown(table)
-        console.print(md)
+        console.print(md)"""
 
 if __name__ == "__main__":
     main()

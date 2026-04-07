@@ -14,7 +14,7 @@ def get_tables(path: str):
         for page in doc:
             for table in page.find_tables():
                 markdowns.append(table.to_markdown())
-            pages.append(page)
+            pages.append((page, str(file)))
 
     return markdowns, pages
 
@@ -37,7 +37,7 @@ def _sign_amount(amount: str):
         return amount.replace("Cr", "").strip()
     return f"-{amount}"
 
-def _table_to_dicts(table_data: list) -> list[dict]:
+def _table_to_dicts(table_data: list, path: str) -> list[dict]:
     header_idx = _find_header_idx(table_data)
     if header_idx is None:
         return []
@@ -52,6 +52,7 @@ def _table_to_dicts(table_data: list) -> list[dict]:
             'Amount': _sign_amount(_parse_amount(row, amount_idx)),
             'Balance': row[headers.index('Balance')],
             'Accrued Bank Charges': row[headers.index('Accrued\nBank\nCharges')],
+            'Source File': path
         }
         for row in table_data[header_idx + 1:]
     ]
@@ -61,7 +62,7 @@ def format_tables(pages) -> list[dict]:
     """takes the pages that get_tables returns and returning a list of dictionaries for insertion into db"""
     return [
         entry
-        for page in pages
+        for page, path in pages
         for table in page.find_tables()
-        for entry in _table_to_dicts(table.extract())
+        for entry in _table_to_dicts(table.extract(),path)
     ]
