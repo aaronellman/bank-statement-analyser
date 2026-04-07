@@ -51,8 +51,8 @@ def _table_to_dicts(table_data: list, path: str) -> list[dict]:
             'Description': row[headers.index('Description')],
             'Amount': _sign_amount(_parse_amount(row, amount_idx)),
             'Balance': row[headers.index('Balance')],
-            'Accrued Bank Charges': row[headers.index('Accrued\nBank\nCharges')],
-            'Source File': path
+            'Accrued_Bank_Charges': row[headers.index('Accrued\nBank\nCharges')],
+            'Source_File': path
         }
         for row in table_data[header_idx + 1:]
     ]
