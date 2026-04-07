@@ -1,3 +1,4 @@
+from db import select_rules
 
 DEFAULTS = {
 
@@ -88,3 +89,15 @@ DEFAULTS = {
 
 def categorise(description: str, user_rules: list[dict]) -> str:
     """categorises the transactions based on the users' categories given and the default categories"""
+    desc = description.lower()
+    
+    for rule in user_rules:
+        if rule["keyword"] in desc.lower():
+            return rule["category"]
+        
+        for keyword,category in DEFAULTS.items():
+            if keyword in desc:
+                return DEFAULTS[category]
+    
+    return "Uncategorised"
+    

@@ -16,8 +16,14 @@ def init_db():
                 accrued_bank_charges TEXT,
                 source_file TEXT,
                 UNIQUE(date, description, amount, balance, source_file)
-            )
-        """)
+            )""")
+            
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS rules (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                keyword TEXT UNIQUE,
+                category TEXT
+            )""")
 
 
 def insert_transactions(transactions: list[dict]):
@@ -29,6 +35,13 @@ def insert_transactions(transactions: list[dict]):
             transactions
         )
 
+
 def select_transactions():
     with sqlite3.connect(DB_PATH) as conn:
         return conn.execute("SELECT * FROM transactions").fetchall()
+    
+
+def select_rules():
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        return [dict(row) for row in conn.execute("SELECT * FROM rules").fetchall()]
