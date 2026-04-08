@@ -1,5 +1,6 @@
 import sqlite3
 from pathlib import Path
+from datetime import datetime
 
 DB_PATH = Path(__file__).parent / "statements.db"
 
@@ -49,9 +50,28 @@ def select_rules():
 
 def insert_rules(rules: list[dict]):
     with sqlite3.connect(DB_PATH) as conn:
-        conn.exectute(
+        conn.executemany(
             """INSERT OR IGNORE INTO rules
                (keyword, category)
                VALUES (:Keyword, :Category)""",
             rules
         )
+
+
+def delete_rule(keyword: str):
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute(
+            "DELETE FROM rules where keyword == ?", (keyword,)
+        )
+
+
+def select_summary(date=None): # date in the format YYYY-MM
+    default_sql = "SELECT category, SUM(amount) from transactions GROUP BY category"
+    
+    with sqlite3.connect(DB_PATH) as conn:
+        if not date:
+            result = conn.execute(default_sql).fetchall()
+        else:
+            result = conn.execute(default_sql + f" WHERE date LIKE ?", (date + "%",)).fetchall()
+
+        return result
