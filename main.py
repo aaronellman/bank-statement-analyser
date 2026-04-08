@@ -3,13 +3,13 @@ from rich.console import Console
 from rich.table import Table
 from rich.markdown import Markdown
 from extractor import get_tables, format_tables
-from db import init_db, insert_transactions, select_transactions, select_summary
+from db import init_db, insert_transactions, select_transactions, select_summary, select_uncategorised
 import typer
+from pathlib import Path
 
 app = typer.Typer()
 console = Console()
 console.rule("[bold]Bank-statement-analyzer")
-init_db()
 
 def _show_sql_results(func, *args, **kwargs): #*args and **kwargs
     t = Table(*args)
@@ -19,7 +19,15 @@ def _show_sql_results(func, *args, **kwargs): #*args and **kwargs
 
 
 @app.command("import")
-def import_statement(path: str):
+def import_statement(path: str, replace_db: bool = False):
+
+    if replace_db:
+        dir_path = Path().cwd()
+        db_path = Path(f"{dir_path}/statements.db")
+        db_path.unlink(missing_ok=True)
+        print(f"[red bold underline] Removed: {db_path}")
+
+    init_db()
     
     result = get_tables(path)
     tables_md, pages = result[0], result[1]
@@ -31,7 +39,14 @@ def import_statement(path: str):
 
 @app.command("summary")
 def summary(month: str = None):
+    init_db()
     _show_sql_results(select_summary, "Category", "Total Spend", month=month)
+
+
+@app.command("show-uncategorised")
+def show_uncategorised(month: str = None):
+    init_db()
+    _show_sql_results(select_uncategorised, "Date", "Description", "Amount", month=month)
     
 
 if __name__ == "__main__":

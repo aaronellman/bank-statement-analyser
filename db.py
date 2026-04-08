@@ -76,3 +76,21 @@ def select_summary(month=None): # month, meaning month in a given year format: Y
             result = conn.execute(base_sql + " WHERE date LIKE ? GROUP BY category", (month + "%",)).fetchall()
 
         return result
+    
+
+def select_uncategorised(month=None):
+    with sqlite3.connect(DB_PATH) as conn:
+        if not month:
+            result = conn.execute(f"""
+                            SELECT date, description, amount
+                            FROM transactions 
+                            WHERE category = 'uncategorised'
+                             """).fetchall()
+        else:
+            result = conn.execute(f"""
+                                SELECT date, description, amount
+                                FROM transactions 
+                                WHERE category = 'uncategorised' and date LIKE ?
+                                """, (month + "%",)).fetchall()
+        
+        return result

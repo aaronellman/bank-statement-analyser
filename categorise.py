@@ -100,5 +100,5 @@ def categorise(description: str, user_rules: list[dict]) -> str:
         if keyword in desc:
             return category
     
-    return "Uncategorised"
+    return "uncategorised"
     
