@@ -13,6 +13,7 @@ def init_db():
                 date TEXT,
                 description TEXT,
                 amount TEXT,
+                category TEXT,
                 balance TEXT,
                 accrued_bank_charges TEXT,
                 source_file TEXT,
@@ -31,8 +32,8 @@ def insert_transactions(transactions: list[dict]):
     with sqlite3.connect(DB_PATH) as conn:
         conn.executemany(
             """INSERT OR IGNORE INTO transactions
-               (date, description, amount, balance, accrued_bank_charges, source_file)
-               VALUES (:Date, :Description, :Amount, :Balance, :Accrued_Bank_Charges, :Source_File)""",
+                      (date, description, amount, category, balance, accrued_bank_charges, source_file)
+               VALUES (:Date, :Description, :Amount, :Category, :Balance, :Accrued_Bank_Charges, :Source_File)""",
             transactions
         )
 
@@ -65,13 +66,13 @@ def delete_rule(keyword: str):
         )
 
 
-def select_summary(date=None): # date in the format YYYY-MM
-    default_sql = "SELECT category, SUM(amount) from transactions GROUP BY category"
+def select_summary(month=None): # month, meaning month in a given year format: YYYY-MM
+    base_sql = "SELECT category, SUM(amount) from transactions"
     
     with sqlite3.connect(DB_PATH) as conn:
-        if not date:
-            result = conn.execute(default_sql).fetchall()
+        if not month:
+            result = conn.execute(base_sql + "GROUP BY category").fetchall()
         else:
-            result = conn.execute(default_sql + f" WHERE date LIKE ?", (date + "%",)).fetchall()
+            result = conn.execute(base_sql + " WHERE date LIKE ? GROUP BY category", (month + "%",)).fetchall()
 
         return result

@@ -18,7 +18,7 @@ DEFAULTS = {
     "caltex":           "Fuel",
     "sasol":            "Fuel",
     "total ":           "Fuel",
-    "Fuel":             "Fuel",  
+    "fuel":             "Fuel",  
 
     # Transport
     "uber":             "Transport",
@@ -79,7 +79,7 @@ DEFAULTS = {
     "service fee":      "Bank Charges",
     "monthly fee":      "Bank Charges",
     "monthly account":  "Bank Charges",
-    "bank charge":      "Bank Charges",
+    "bank charges":      "Bank Charges",
     "admin fee":        "Bank Charges",
 
     # Cash
@@ -91,13 +91,14 @@ def categorise(description: str, user_rules: list[dict]) -> str:
     """categorises the transactions based on the users' categories given and the default categories"""
     desc = description.lower()
     
-    for rule in user_rules:
-        if rule["keyword"] in desc.lower():
-            return rule["category"]
+    if user_rules:
+        for rule in user_rules:
+            if rule["keyword"] in desc.lower() or desc.lower() in rule["keyword"]:
+                return rule["category"]
         
-        for keyword,category in DEFAULTS.items():
-            if keyword in desc:
-                return DEFAULTS[category]
+    for keyword,category in DEFAULTS.items():
+        if keyword in desc:
+            return category
     
     return "Uncategorised"
     

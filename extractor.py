@@ -2,6 +2,7 @@ import pymupdf
 from pathlib import Path
 import re
 from datetime import datetime
+from categorise import categorise
 
 def get_tables(path: str):
     """returns markdown of the tables in the statement and the tables themselves"""
@@ -40,8 +41,8 @@ def _parse_amount(row: list, amount_idx: int) -> str:
 
 def _sign_amount(amount: str):
     if "Cr" in amount:
-        return amount.replace("Cr", "").strip()
-    return f"-{amount}"
+        return amount.replace("Cr", "").replace(',', '').strip()
+    return f"-{amount}".replace(',', '')
 
 
 def _table_to_dicts(table_data: list, path: str, start_date, end_date) -> list[dict]:
@@ -55,8 +56,9 @@ def _table_to_dicts(table_data: list, path: str, start_date, end_date) -> list[d
     return [
         {
             'Date': _resolve_year(row[headers.index('Date')], start_date, end_date),
-            'Description': row[headers.index('Description')],
+            'Description': (desc := row[headers.index('Description')]),
             'Amount': _sign_amount(_parse_amount(row, amount_idx)),
+            'Category': categorise(desc, None),
             'Balance': row[headers.index('Balance')],
             'Accrued_Bank_Charges': row[headers.index('Accrued\nBank\nCharges')],
             'Source_File': path
