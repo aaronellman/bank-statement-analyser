@@ -66,17 +66,26 @@ def delete_rule(keyword: str):
         )
 
 
-def select_summary(month=None): # month, meaning month in a given year format: YYYY-MM
-    base_sql = "SELECT category, SUM(amount) from transactions"
+def select_summary(month=None, spending_only: bool = False): # month, meaning month in a given year format: YYYY-MM
     
-    with sqlite3.connect(DB_PATH) as conn:
-        if not month:
-            result = conn.execute(base_sql + "GROUP BY category").fetchall()
-        else:
-            result = conn.execute(base_sql + " WHERE date LIKE ? GROUP BY category", (month + "%",)).fetchall()
+    params = []
+    conditions = []
 
-        return result
+    if spending_only: 
+        conditions.append(" amount < 0 ")
+    if month:
+        conditions.append(" date LIKE ? ")
+        params.append(month + "%")
     
+    sql = "SELECT category, SUM(amount) from transactions"
+    if conditions:
+        sql += " WHERE " + " AND ".join(conditions)
+    sql += " GROUP BY category"
+
+    with sqlite3.connect(DB_PATH) as conn:
+        result = conn.execute(sql, params).fetchall()
+        return result
+
 
 def select_uncategorised(month=None):
     with sqlite3.connect(DB_PATH) as conn:
@@ -90,7 +99,7 @@ def select_uncategorised(month=None):
             result = conn.execute(f"""
                                 SELECT date, description, amount
                                 FROM transactions 
-                                WHERE category = 'uncategorised' and date LIKE ?
+                                WHERE category = 'uncategorised' AND date LIKE ?
                                 """, (month + "%",)).fetchall()
         
         return result

@@ -38,9 +38,9 @@ def import_statement(path: str, replace_db: bool = False):
     
 
 @app.command("summary")
-def summary(month: str = None):
+def summary(month: str = None, spending_only: bool = None):
     init_db()
-    _show_sql_results(select_summary, "Category", "Total Spend", month=month)
+    _show_sql_results(select_summary, "Category", "Category Total", month=month, spending_only=spending_only)
 
 
 @app.command("show-uncategorised")
