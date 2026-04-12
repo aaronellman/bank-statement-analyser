@@ -3,7 +3,8 @@ from rich.console import Console
 from rich.table import Table
 from rich.markdown import Markdown
 from extractor import get_tables, format_tables
-from db import init_db, insert_transactions, select_transactions, select_summary, select_uncategorised
+from db import (init_db, insert_transactions, select_transactions,
+                select_summary, select_uncategorised)
 import typer
 from pathlib import Path
 
@@ -38,9 +39,9 @@ def import_statement(path: str, replace_db: bool = False):
     
 
 @app.command("summary")
-def summary(month: str = None, spending_only: bool = None):
+def summary(month: str = None):
     init_db()
-    _show_sql_results(select_summary, "Category", "Category Total", month=month, spending_only=spending_only)
+    _show_sql_results(select_summary, "Category", "Earnings", "Spendings", month=month)
 
 
 @app.command("show-uncategorised")
