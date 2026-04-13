@@ -3,6 +3,8 @@ from pathlib import Path
 import re
 from datetime import datetime
 from categorise import categorise
+from db import select_hashed_file
+import hashlib
 
 def get_tables(path: str):
     """returns markdown of the tables in the statement and the tables themselves"""
@@ -15,12 +17,20 @@ def get_tables(path: str):
     for file in files:
         doc = pymupdf.open(file)
         
+        file_bytes = file.read_bytes()
+        file_hash = _get_hash(file_bytes)
+
+        result = select_hashed_file(file_hash)
+
+        if result:
+            continue
+        
         start_date,end_date = _extract_statement_period(doc)
         for page in doc:
             
             for table in page.find_tables():
                 markdowns.append(table.to_markdown())
-            pages.append((page, str(file), start_date, end_date))
+            pages.append((page, str(file), start_date, end_date, file_hash))
 
     return markdowns, pages
 
@@ -45,7 +55,7 @@ def _sign_amount(amount: str):
     return f"-{amount}".replace(',', '')
 
 
-def _table_to_dicts(table_data: list, path: str, start_date, end_date) -> list[dict]:
+def _table_to_dicts(table_data: list, path: str, start_date, end_date, file_hash) -> list[dict]:
     header_idx = _find_header_idx(table_data)
     if header_idx is None:
         return []
@@ -61,7 +71,8 @@ def _table_to_dicts(table_data: list, path: str, start_date, end_date) -> list[d
             'Category': categorise(desc, None),
             'Balance': row[headers.index('Balance')],
             'Accrued_Bank_Charges': row[headers.index('Accrued\nBank\nCharges')],
-            'Source_File': path
+            'Source_File': path,
+            "File_Hash": file_hash
         }
         for row in table_data[header_idx + 1:]
     ]
@@ -76,6 +87,7 @@ def _extract_statement_period(doc):
     
     return start_date,end_date
 
+
 def _resolve_year(date_str: str, start_date: datetime, end_date: datetime) -> str:
     parsed = datetime.strptime(date_str.strip(), "%d %b")
     
@@ -87,12 +99,16 @@ def _resolve_year(date_str: str, start_date: datetime, end_date: datetime) -> st
     
     raise ValueError(f"Could not resolve year for '{date_str}' within {start_date} to {end_date}")
 
+def _get_hash(file_content: bytes):
+    return hashlib.sha256(file_content).hexdigest()
+
+
 def format_tables(pages) -> list[dict]:
     """takes the pages that get_tables returns and returning a list of dictionaries for insertion into db"""
 
     return [
         entry
-        for page, path, start_date, end_date in pages
+        for page, path, start_date, end_date, file_hash in pages
         for table in page.find_tables()
-        for entry in _table_to_dicts(table.extract(),path, start_date, end_date)
+        for entry in _table_to_dicts(table.extract(),path, start_date, end_date, file_hash)
     ]

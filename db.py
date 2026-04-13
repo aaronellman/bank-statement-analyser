@@ -17,6 +17,7 @@ def init_db():
                 balance TEXT,
                 accrued_bank_charges TEXT,
                 source_file TEXT,
+                file_hash TEXT,
                 UNIQUE(date, description, amount, balance, source_file)
             )""")
             
@@ -32,8 +33,8 @@ def insert_transactions(transactions: list[dict]):
     with sqlite3.connect(DB_PATH) as conn:
         conn.executemany(
             """INSERT OR IGNORE INTO transactions
-                      (date, description, amount, category, balance, accrued_bank_charges, source_file)
-               VALUES (:Date, :Description, :Amount, :Category, :Balance, :Accrued_Bank_Charges, :Source_File)""",
+                      (date, description, amount, category, balance, accrued_bank_charges, source_file, file_hash)
+               VALUES (:Date, :Description, :Amount, :Category, :Balance, :Accrued_Bank_Charges, :Source_File, :File_Hash)""",
             transactions
         )
 
@@ -89,16 +90,26 @@ def select_summary(month=None): # month, meaning month in a given year format: Y
 def select_uncategorised(month=None):
     with sqlite3.connect(DB_PATH) as conn:
         if not month:
-            result = conn.execute(f"""
+            result = conn.execute("""
                             SELECT date, description, amount
                             FROM transactions 
                             WHERE category = 'uncategorised'
                              """).fetchall()
         else:
-            result = conn.execute(f"""
+            result = conn.execute("""
                                 SELECT date, description, amount
                                 FROM transactions 
                                 WHERE category = 'uncategorised' AND date LIKE ?
                                 """, (month + "%",)).fetchall()
+        
+        return result
+    
+
+def select_hashed_file(file_hash: str):
+    with sqlite3.connect(DB_PATH) as conn:
+        result = conn.execute("""
+                        SELECT file_hash from transactions
+                        WHERE file_hash = ?
+                        """, (file_hash,)).fetchone()
         
         return result
