@@ -14,6 +14,8 @@ def get_tables(path: str):
 
     markdowns = []
     pages = []
+    imported = []
+
     for file in files:
         doc = pymupdf.open(file)
         
@@ -24,15 +26,17 @@ def get_tables(path: str):
 
         if result:
             continue
+
+        imported.append((file_hash, str(file)))
         
         start_date,end_date = _extract_statement_period(doc)
         for page in doc:
             
             for table in page.find_tables():
                 markdowns.append(table.to_markdown())
-            pages.append((page, str(file), start_date, end_date, file_hash))
+            pages.append((page, start_date, end_date))
 
-    return markdowns, pages
+    return markdowns, pages, imported
 
 
 def _find_header_idx(table_data: list) -> int | None:
@@ -55,7 +59,7 @@ def _sign_amount(amount: str):
     return f"-{amount}".replace(',', '')
 
 
-def _table_to_dicts(table_data: list, path: str, start_date, end_date, file_hash) -> list[dict]:
+def _table_to_dicts(table_data: list, start_date, end_date) -> list[dict]:
     header_idx = _find_header_idx(table_data)
     if header_idx is None:
         return []
@@ -71,8 +75,6 @@ def _table_to_dicts(table_data: list, path: str, start_date, end_date, file_hash
             'Category': categorise(desc, None),
             'Balance': row[headers.index('Balance')],
             'Accrued_Bank_Charges': row[headers.index('Accrued\nBank\nCharges')],
-            'Source_File': path,
-            "File_Hash": file_hash
         }
         for row in table_data[header_idx + 1:]
     ]
@@ -108,7 +110,7 @@ def format_tables(pages) -> list[dict]:
 
     return [
         entry
-        for page, path, start_date, end_date, file_hash in pages
+        for page, start_date, end_date in pages
         for table in page.find_tables()
-        for entry in _table_to_dicts(table.extract(),path, start_date, end_date, file_hash)
+        for entry in _table_to_dicts(table.extract(),start_date, end_date)
     ]

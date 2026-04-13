@@ -4,7 +4,7 @@ from rich.table import Table
 from rich.markdown import Markdown
 from extractor import get_tables, format_tables
 from db import (init_db, insert_transactions, select_transactions,
-                select_summary, select_uncategorised)
+                select_summary, select_uncategorised, insert_imported_files)
 import typer
 from pathlib import Path
 
@@ -31,10 +31,13 @@ def import_statement(path: str, replace_db: bool = False):
     init_db()
     
     result = get_tables(path)
-    tables_md, pages = result[0], result[1]
+    tables_md, pages, imported = result[0], result[1], result[2]
     statements_dict = format_tables(pages)
     
     insert_transactions(statements_dict)
+    
+    insert_imported_files(imported)
+
     _show_sql_results(select_transactions, "ID", "Date", "Description", "Amount", "Category", "Balance", "Accrued")
     
 

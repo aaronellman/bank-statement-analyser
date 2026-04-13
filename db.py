@@ -16,9 +16,7 @@ def init_db():
                 category TEXT,
                 balance TEXT,
                 accrued_bank_charges TEXT,
-                source_file TEXT,
-                file_hash TEXT,
-                UNIQUE(date, description, amount, balance, source_file)
+                UNIQUE(date, description, amount, balance)
             )""")
             
         conn.execute("""
@@ -27,14 +25,21 @@ def init_db():
                 keyword TEXT UNIQUE,
                 category TEXT
             )""")
+        
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS imported_files (
+            file_hash TEXT PRIMARY KEY,
+            source_file TEXT,
+            imported_at datetime DEFAULT CURRENT_TIMESTAMP)
+            """)
 
 
 def insert_transactions(transactions: list[dict]):
     with sqlite3.connect(DB_PATH) as conn:
         conn.executemany(
             """INSERT OR IGNORE INTO transactions
-                      (date, description, amount, category, balance, accrued_bank_charges, source_file, file_hash)
-               VALUES (:Date, :Description, :Amount, :Category, :Balance, :Accrued_Bank_Charges, :Source_File, :File_Hash)""",
+                      (date, description, amount, category, balance, accrued_bank_charges)
+               VALUES (:Date, :Description, :Amount, :Category, :Balance, :Accrued_Bank_Charges)""",
             transactions
         )
 
@@ -103,12 +108,20 @@ def select_uncategorised(month=None):
                                 """, (month + "%",)).fetchall()
         
         return result
-    
+
+def insert_imported_files(imported: list[tuple]):
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.executemany(
+            """INSERT OR IGNORE INTO imported_files
+               (file_hash, source_file)
+               VALUES (?,?)""",
+               imported  
+        )
 
 def select_hashed_file(file_hash: str):
     with sqlite3.connect(DB_PATH) as conn:
         result = conn.execute("""
-                        SELECT file_hash from transactions
+                        SELECT file_hash from imported_files
                         WHERE file_hash = ?
                         """, (file_hash,)).fetchone()
         
