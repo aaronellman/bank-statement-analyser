@@ -59,8 +59,9 @@ def _sign_amount(amount: str) -> float:
     return float(f"-{amount}".replace(',', ''))
 
 
-def _parse_monetary(value: str) -> float:
-    return float(value.replace(',', '').strip())
+def _parse_monetary(value: str) -> float | None:
+    cleaned = value.replace(',', '').strip()
+    return float(cleaned) if cleaned else None
 
 
 def _table_to_dicts(table_data: list, start_date, end_date) -> list[dict]:
