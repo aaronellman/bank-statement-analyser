@@ -53,10 +53,14 @@ def _parse_amount(row: list, amount_idx: int) -> str:
     return amount
 
 
-def _sign_amount(amount: str):
+def _sign_amount(amount: str) -> float:
     if "Cr" in amount:
-        return amount.replace("Cr", "").replace(',', '').strip()
-    return f"-{amount}".replace(',', '')
+        return float(amount.replace("Cr", "").replace(',', '').strip())
+    return float(f"-{amount}".replace(',', ''))
+
+
+def _parse_monetary(value: str) -> float:
+    return float(value.replace(',', '').strip())
 
 
 def _table_to_dicts(table_data: list, start_date, end_date) -> list[dict]:
@@ -73,8 +77,8 @@ def _table_to_dicts(table_data: list, start_date, end_date) -> list[dict]:
             'Description': (desc := row[headers.index('Description')]),
             'Amount': _sign_amount(_parse_amount(row, amount_idx)),
             'Category': categorise(desc, None),
-            'Balance': row[headers.index('Balance')],
-            'Accrued_Bank_Charges': row[headers.index('Accrued\nBank\nCharges')],
+            'Balance': _parse_monetary(row[headers.index('Balance')]),
+            'Accrued_Bank_Charges': _parse_monetary(row[headers.index('Accrued\nBank\nCharges')]),
         }
         for row in table_data[header_idx + 1:]
     ]

@@ -7,8 +7,8 @@ A Python CLI tool that parses PDF bank statements, stores transactions in a loca
 - **PDF parsing** - extracts transactions from one or more PDF bank statements using `pymupdf`
 - **Local storage** - persists transactions in a SQLite database with deduplication so re-importing the same file is safe
 - **Auto-categorisation** - maps transaction descriptions to categories via keyword rules (e.g. `UBER` → `Transport`)
-- **Spending insights** - summarises spending by category, month, or merchant
-- **Rich terminal UI** - tables, colours, and progress bars via `rich`
+- **Spending insights** - summarises spending by category or month
+- **Rich terminal UI** - tables and colours via `rich`
 
 ## Transaction shape
 
@@ -19,8 +19,9 @@ Each transaction is stored with the following fields:
 | `date` | `str` | ISO 8601 date, e.g. `2024-01-15` |
 | `description` | `str` | Raw merchant/payee string from the statement |
 | `amount` | `float` | Negative = debit, positive = credit |
-| `category` | `str` | Auto-assigned category or `Uncategorised` |
-| `source_file` | `str` | Filename of the source PDF |
+| `category` | `str` | Auto-assigned category or `uncategorised` |
+| `balance` | `float` | Running account balance after the transaction |
+| `accrued_bank_charges` | `float` | Accrued bank charges at time of transaction |
 
 ## Installation
 
@@ -59,37 +60,20 @@ Filter by month:
 uv run python main.py summary --month 2024-01
 ```
 
-### Manage categorisation rules
-
-Add a custom keyword-to-category rule:
-
-```bash
-uv run python main.py categorise add "Uber" Transport
-```
-
-List all user-defined rules:
-
-```bash
-uv run python main.py categorise list
-```
-
-Remove a rule:
-
-```bash
-uv run python main.py categorise remove "Uber"
-```
-
 ## Categorisation
 
-Transactions are categorised by matching keywords (case-insensitive) against the transaction description. A set of built-in defaults covers common merchants automatically. User-defined rules are stored in the database and take priority over the defaults — any rule you add via `categorise add` will override the built-in mapping for that keyword.
+Transactions are categorised by matching keywords (case-insensitive) against the transaction description. A set of built-in defaults covers common merchants automatically.
 
-Transactions that match no keyword are stored as `Uncategorised`.
+Transactions that match no keyword are stored as `uncategorised`.
 
 ## Project structure
 
 ```
 bank-statement-analyzer/
 ├── main.py          # CLI entry point and commands
+├── extractor.py     # PDF parsing and transaction extraction
+├── db.py            # SQLite database access and queries
+├── categorise.py    # Keyword-to-category matching logic
 ├── pyproject.toml   # Project metadata and dependencies
 ├── uv.lock          # Locked dependency versions
 └── statements.db    # SQLite database (created on first import)

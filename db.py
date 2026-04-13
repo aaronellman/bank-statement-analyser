@@ -12,10 +12,10 @@ def init_db():
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 date TEXT,
                 description TEXT,
-                amount TEXT,
+                amount REAL,
                 category TEXT,
-                balance TEXT,
-                accrued_bank_charges TEXT,
+                balance REAL,
+                accrued_bank_charges REAL,
                 UNIQUE(date, description, amount, balance)
             )""")
             
