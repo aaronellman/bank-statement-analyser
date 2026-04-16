@@ -28,7 +28,7 @@ Each transaction is stored with the following fields:
 Requires Python 3.13+ and [uv](https://docs.astral.sh/uv/).
 
 ```bash
-git clone https://github.com/your-username/bank-statement-analyzer.git
+git clone https://github.com/aaronellman/bank-statement-analyser.git
 cd bank-statement-analyzer
 uv sync
 ```
