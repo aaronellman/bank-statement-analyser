@@ -2,9 +2,10 @@ from rich import print
 from rich.console import Console
 from rich.table import Table
 from rich.markdown import Markdown
-from extractor import get_tables, format_tables
+from extractor import get_tables, format_tables, get_category_total_by_date
 from db import (init_db, insert_transactions, select_transactions,
-                select_summary, select_uncategorised, insert_imported_files)
+                select_summary, select_uncategorised, insert_imported_files, 
+                select_transaction_trunc_date)
 import typer
 from pathlib import Path
 
@@ -17,6 +18,27 @@ def _show_sql_results(func, *args, **kwargs): #*args and **kwargs
     for row in func(**kwargs):
         t.add_row(*[str(v) for v in row])
     console.print(t)
+
+def _display_trends(func, *args, **kwargs): 
+    t = Table(*args)
+    rows = list(func(**kwargs))
+
+    for i,row in enumerate(rows):
+        is_last_month = (len(rows) -1 == i or row["cleaned_date"] != rows[i + 1]["cleaned_date"])
+        
+        t.add_row(*[str(round(v, 2) if isinstance(v,float) else str(v)) for v in row], end_section=is_last_month)
+    console.print(t)
+
+@app.command("trends")
+def get_trends():
+    init_db()
+    
+    rows = select_transaction_trunc_date()
+    result = get_category_total_by_date(rows)
+
+    #print(result)
+    print("[bold]Showing spendings by category for each Month")
+    _display_trends(select_transaction_trunc_date, "Month", "Category", "Total")
 
 
 @app.command("import")

@@ -49,6 +49,20 @@ def select_transactions():
         return conn.execute("SELECT * FROM transactions").fetchall()
 
 
+def select_transaction_trunc_date():
+    """returns sqlite3 rows that have the date truncated to Y-M for trend analysis"""
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        result = conn.execute("""
+                              SELECT strftime('%Y-%m', date) AS cleaned_date, category, SUM(amount) as amount 
+                              FROM transactions
+                              WHERE amount < 0 
+                              GROUP BY cleaned_date, category
+                              ORDER BY cleaned_date ASC""").fetchall()
+
+        return result
+
+
 def select_rules():
     with sqlite3.connect(DB_PATH) as conn:
         conn.row_factory = sqlite3.Row

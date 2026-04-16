@@ -119,3 +119,15 @@ def format_tables(pages) -> list[dict]:
         for table in page.find_tables()
         for entry in _table_to_dicts(table.extract(),start_date, end_date)
     ]
+
+def get_category_total_by_date(transactions: list) ->dict[list]:
+    """takes all transactions and returns monthly categorised totals by date"""
+    months: dict[list] = {}
+
+    for row in transactions:
+        #print(row)
+        date = row["cleaned_date"]
+
+        months.setdefault(date, []).append(row[1:])
+
+    return months
