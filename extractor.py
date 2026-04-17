@@ -125,7 +125,7 @@ def get_category_total_by_date(transactions: list) ->dict[list]:
     months: dict[list] = {}
 
     for row in transactions:
-        #print(row)
+
         date = row["cleaned_date"]
 
         months.setdefault(date, []).append(row[1:])

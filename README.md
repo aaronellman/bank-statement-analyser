@@ -7,7 +7,8 @@ A Python CLI tool that parses PDF bank statements, stores transactions in a loca
 - **PDF parsing** - extracts transactions from one or more PDF bank statements using `pymupdf`
 - **Local storage** - persists transactions in a SQLite database with deduplication so re-importing the same file is safe
 - **Auto-categorisation** - maps transaction descriptions to categories via keyword rules (e.g. `UBER` → `Transport`)
-- **Spending insights** - summarises spending by category or month
+- **Custom categories** - add, remove, and list your own keyword-to-category rules at runtime
+- **Spending insights** - summarise spending by category or month, and view month-on-month trends
 - **Rich terminal UI** - tables and colours via `rich`
 
 ## Transaction shape
@@ -60,11 +61,39 @@ Filter by month:
 uv run python main.py summary --month 2024-01
 ```
 
+### View uncategorised transactions
+
+```bash
+uv run python main.py show-uncategorised
+uv run python main.py show-uncategorised --month 2024-01
+```
+
+### View month-on-month spending trends
+
+Breaks down spending by category for each month:
+
+```bash
+uv run python main.py trends
+```
+
 ## Categorisation
 
 Transactions are categorised by matching keywords (case-insensitive) against the transaction description. A set of built-in defaults covers common merchants automatically.
 
 Transactions that match no keyword are stored as `uncategorised`.
+
+### Managing custom categories
+
+```bash
+# Add a keyword rule
+uv run python main.py categorise add "netflix" "Entertainment"
+
+# Remove a keyword rule
+uv run python main.py categorise remove "netflix"
+
+# List all custom rules
+uv run python main.py categorise list
+```
 
 ## Project structure
 

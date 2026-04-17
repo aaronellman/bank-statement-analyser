@@ -1,4 +1,4 @@
-from db import select_rules
+from db import select_categories
 
 DEFAULTS = {
 

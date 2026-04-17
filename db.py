@@ -18,9 +18,10 @@ def init_db():
                 accrued_bank_charges REAL,
                 UNIQUE(date, description, amount, balance)
             )""")
-            
+
+        #storing custom categories created by user
         conn.execute("""
-            CREATE TABLE IF NOT EXISTS rules (
+            CREATE TABLE IF NOT EXISTS categories (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 keyword TEXT UNIQUE,
                 category TEXT
@@ -63,26 +64,40 @@ def select_transaction_trunc_date():
         return result
 
 
-def select_rules():
+def select_categories():
     with sqlite3.connect(DB_PATH) as conn:
         conn.row_factory = sqlite3.Row
-        return [dict(row) for row in conn.execute("SELECT * FROM rules").fetchall()]
-    
+        return [dict(row) for row in conn.execute("SELECT * FROM categories").fetchall()]
 
-def insert_rules(rules: list[dict]):
+
+def select_categories_display():
+    with sqlite3.connect(DB_PATH) as conn:
+        return conn.execute("SELECT keyword, category FROM categories").fetchall()
+
+
+def category_exists(keyword: str):
+    with sqlite3.connect(DB_PATH) as conn:
+        result = conn.execute(
+            "SELECT 1 FROM categories where keyword = ?", (keyword,)
+        ).fetchone()
+
+        return result
+
+
+def insert_categories(rules: list[dict]):
     with sqlite3.connect(DB_PATH) as conn:
         conn.executemany(
-            """INSERT OR IGNORE INTO rules
+            """INSERT OR IGNORE INTO categories
                (keyword, category)
                VALUES (:Keyword, :Category)""",
             rules
         )
 
 
-def delete_rule(keyword: str):
+def delete_category(keyword: str):
     with sqlite3.connect(DB_PATH) as conn:
         conn.execute(
-            "DELETE FROM rules where keyword == ?", (keyword,)
+            "DELETE FROM categories where keyword = ?", (keyword,)
         )
 
 

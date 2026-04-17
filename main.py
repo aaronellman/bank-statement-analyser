@@ -4,12 +4,19 @@ from rich.table import Table
 from rich.markdown import Markdown
 from extractor import get_tables, format_tables, get_category_total_by_date
 from db import (init_db, insert_transactions, select_transactions,
-                select_summary, select_uncategorised, insert_imported_files, 
-                select_transaction_trunc_date)
+                select_summary, select_uncategorised, insert_imported_files,
+                select_transaction_trunc_date, insert_categories, delete_category,
+                category_exists, select_categories, select_categories_display)
 import typer
 from pathlib import Path
 
 app = typer.Typer()
+
+#creating a subapp to deal with subcommands for the categorise command
+category_app = typer.Typer()
+
+app.add_typer(category_app, name="categorise")
+
 console = Console()
 console.rule("[bold]Bank-statement-analyzer")
 
@@ -18,6 +25,7 @@ def _show_sql_results(func, *args, **kwargs): #*args and **kwargs
     for row in func(**kwargs):
         t.add_row(*[str(v) for v in row])
     console.print(t)
+
 
 def _display_trends(func, *args, **kwargs): 
     t = Table(*args)
@@ -29,6 +37,33 @@ def _display_trends(func, *args, **kwargs):
         t.add_row(*[str(round(v, 2) if isinstance(v,float) else str(v)) for v in row], end_section=is_last_month)
     console.print(t)
 
+
+#categoriser subcommands
+@category_app.command("add")
+def add_categorisation(keyword: str, category: str):
+    row = [{"Keyword": keyword, "Category": category}]
+    
+    insert_categories(row)
+    print("[bold]Successfully Added Category")
+
+
+@category_app.command("remove")
+def remove_categorisation(keyword: str):
+    
+    #query selects one for performance
+    if category_exists(keyword) == 1: 
+        
+        delete_category(keyword)
+        print("[orange3][bold]Category Removed") 
+    else:
+        print("[red][bold]Category does not exist")
+
+
+@category_app.command("list")
+def list_categories():
+    _show_sql_results(select_categories_display, "Keyword", "Category")
+
+
 @app.command("trends")
 def get_trends():
     init_db()
@@ -36,7 +71,6 @@ def get_trends():
     rows = select_transaction_trunc_date()
     result = get_category_total_by_date(rows)
 
-    #print(result)
     print("[bold]Showing spendings by category for each Month")
     _display_trends(select_transaction_trunc_date, "Month", "Category", "Total")
 
