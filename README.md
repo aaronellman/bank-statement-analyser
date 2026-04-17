@@ -1,6 +1,6 @@
 # bank-statement-analyzer
 
-A Python CLI tool that parses PDF bank statements, stores transactions in a local SQLite database, and surfaces spending insights.
+A Python CLI tool that parses FNB PDF bank statements, stores transactions in a local SQLite database, and surfaces spending insights.
 
 ## Features
 
